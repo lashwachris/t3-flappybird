@@ -1,10 +1,13 @@
 #include <Arduino.h>
 
 #include "Config.h"
+#include "assets/BirdSkin.h"
 #include "hal/Button.h"
 #include "hal/Display.h"
 #include "input/InputState.h"
 #include "scenes/DiagnosticsScene.h"
+#include "scenes/GameScene.h"
+#include "scenes/Scene.h"
 #include "util/FrameLimiter.h"
 #include "util/FrameStats.h"
 
@@ -15,7 +18,10 @@ Button buttonTop(cfg::pins::kButtonTop);
 Button buttonBottom(cfg::pins::kButtonBottom);
 FrameLimiter frameLimiter(cfg::timing::kTargetFps);
 FrameStats frameStats(cfg::timing::kStatsWindowMs);
-DiagnosticsScene scene;
+
+GameScene gameScene(kBirdSkin);
+DiagnosticsScene diagnosticsScene;
+Scene* scene = &gameScene;
 
 InputState readInput() {
   const uint32_t nowMs = millis();
@@ -24,28 +30,42 @@ InputState readInput() {
   return {buttonTop.state(), buttonBottom.state()};
 }
 
+[[noreturn]] void halt(const char* message) {
+  log_e("%s", message);
+  for (;;) {
+    delay(1000);
+  }
+}
+
 }  // namespace
 
 void setup() {
   Serial.begin(115200);
 
   if (!display.begin()) {
-    log_e("Display init failed: could not allocate frame canvas");
-    for (;;) {
-      delay(1000);
-    }
+    halt("Display init failed: could not allocate frame canvas");
   }
   buttonTop.begin();
   buttonBottom.begin();
+
+  // Holding BOTTOM during boot opens the hardware diagnostics screen instead.
+  // (TOP can't be used: holding BOOT at reset enters the ROM bootloader.)
+  if (buttonBottom.isDown()) {
+    scene = &diagnosticsScene;
+  } else if (!gameScene.begin(esp_random())) {
+    halt("Game init failed: could not allocate character sprites");
+  }
 
   frameLimiter.reset(micros());
 }
 
 void loop() {
-  scene.update(readInput(), cfg::timing::kFixedDt);
+  // The frame limiter locks the loop to kTargetFps with ~2x headroom, so one
+  // fixed timestep per frame keeps game speed constant and motion smooth.
+  scene->update(readInput(), cfg::timing::kFixedDt);
 
   const uint32_t renderStartUs = micros();
-  scene.draw(display.canvas(), frameStats);
+  scene->draw(display.canvas(), frameStats);
   const uint32_t presentStartUs = micros();
   display.present();
   const uint32_t frameEndUs = micros();

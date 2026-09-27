@@ -42,6 +42,37 @@ constexpr float kFixedDt = 1.0f / kTargetFps;
 constexpr uint32_t kStatsWindowMs = 500;
 }  // namespace timing
 
+// Gameplay tuning. Distances are in pixels, speeds in px/s, times in seconds.
+namespace game {
+constexpr float kGroundHeight = 16.0f;
+constexpr float kGroundY = display::kHeight - kGroundHeight;
+
+constexpr float kBirdX = 80.0f;  // Horizontal centre of the character.
+constexpr float kGravity = 600.0f;
+constexpr float kFlapVelocity = -150.0f;
+constexpr float kMaxFallSpeed = 260.0f;
+
+constexpr float kScrollSpeed = 70.0f;
+constexpr float kPipeWidth = 26.0f;
+constexpr float kPipeGap = 50.0f;
+constexpr float kPipeSpacing = 120.0f;   // Distance between consecutive pipes.
+constexpr float kPipeMargin = 18.0f;     // Minimum distance of a gap from the top or ground.
+constexpr float kFirstPipeX = display::kWidth + 40.0f;
+
+constexpr float kRestartLockout = 0.4f;  // Ignore restart this long after dying.
+}  // namespace game
+
+// Purely visual settings.
+namespace render {
+constexpr float kTiltPerSpeed = 0.3f;  // Degrees of tilt per px/s of vertical speed.
+constexpr float kMinTilt = -25.0f;     // Nose up.
+constexpr float kMaxTilt = 70.0f;      // Nose down.
+constexpr float kTitleBobAmplitude = 4.0f;
+constexpr float kTitleBobSpeed = 4.0f;  // rad/s
+constexpr bool kShowFps = false;        // Small FPS readout in the corner.
+constexpr float kGroundPatternWidth = 16.0f;  // Ground texture repeats every N px.
+}  // namespace render
+
 namespace input {
 // After a state change, further changes are ignored for this long. The first
 // edge registers immediately, so debouncing adds no input latency.

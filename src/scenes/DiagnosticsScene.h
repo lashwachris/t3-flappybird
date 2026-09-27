@@ -2,9 +2,7 @@
 
 #include <cstdint>
 
-#include "hal/LGFX_TDisplayS3.h"
-#include "input/InputState.h"
-#include "util/FrameStats.h"
+#include "scenes/Scene.h"
 
 // Hardware bring-up screen. It checks:
 //  - panel offset and orientation: a 1-px border must be visible on all four
@@ -13,10 +11,10 @@
 //  - button mapping: each physical button must light up its own indicator;
 //  - performance: FPS and per-frame render/present times.
 // A bouncing square forces a full-frame redraw every frame.
-class DiagnosticsScene {
+class DiagnosticsScene : public Scene {
  public:
-  void update(const InputState& input, float dt);
-  void draw(LGFX_Sprite& canvas, const FrameStats& stats) const;
+  void update(const InputState& input, float dt) override;
+  void draw(LGFX_Sprite& canvas, const FrameStats& stats) override;
 
  private:
   void drawBackground(LGFX_Sprite& canvas) const;

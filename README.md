@@ -8,10 +8,13 @@ See [PLAN.md](PLAN.md) for the design and the iteration roadmap.
 
 Hold the board in landscape with the USB-C port on the left.
 
-| Button | Action |
-|---|---|
-| Top (GPIO 0 / BOOT) | Start, or restart after game over |
-| Bottom (GPIO 14 / KEY) | Flap |
+| Button | Title | Get Ready | Playing | Game over |
+|---|---|---|---|---|
+| Top (GPIO 0 / BOOT) | start | — | — | restart (after 0.4 s) |
+| Bottom (GPIO 14 / KEY) | — | first flap, starts play | flap | — |
+
+**Diagnostics screen:** hold **BOTTOM** while the board powers up or resets. It shows
+the test pattern, button indicators and frame timings.
 
 ## Building and flashing
 
@@ -27,15 +30,17 @@ again. Tap **RST** afterwards to run the new firmware.
 Every push is also built by GitHub Actions. The `firmware` artifact includes
 `flappybird-merged.bin`, which can be flashed at offset `0x0` with a browser-based flasher.
 
-## Current state: iteration 1 (hardware bring-up)
+## Code layout
 
-The firmware shows a diagnostics screen:
+| Path | Responsibility |
+|---|---|
+| `include/Config.h` | All pins and tuning constants (physics, pipes, visuals) |
+| `src/hal/` | Board-specific code: display setup, frame canvas, debounced buttons |
+| `src/input/` | Hardware-independent button snapshot passed to the game |
+| `src/game/` | Game rules: state machine, bird physics, pipes, collision. No display or GPIO code |
+| `src/render/` | Draws the game state; pixel-art baking; colours; text helpers |
+| `src/assets/` | Character skins as editable pixel art (character rows + palette) |
+| `src/scenes/` | Full-screen modes: the game and the diagnostics screen |
+| `src/util/` | Frame limiter, frame stats, random number generator |
 
-- **Red border:** all four edges must be visible. If one is missing, the panel offset is wrong.
-- **"USB" label:** must be next to the USB-C port. If the image is upside down, set
-  `cfg::display::kRotation` to `1` in `include/Config.h`.
-- **Colour bars, left to right:** white, yellow, cyan, green, magenta, red, blue, black.
-- **TOP / BOTTOM indicators:** each lights up while its physical button is held. If they
-  are swapped, swap `kButtonTop` and `kButtonBottom` in `include/Config.h`.
-- **Stats panel:** actual FPS (capped at 60), render and push times per frame, and the
-  uncapped frame rate the hardware could reach.
+To try different gameplay settings, edit `cfg::game` in `include/Config.h`.

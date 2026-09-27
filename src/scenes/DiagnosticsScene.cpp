@@ -34,7 +34,7 @@ void DiagnosticsScene::update(const InputState& input, float dt) {
   bounce(boxY_, boxVy_, dt, cfg::display::kHeight - kBoxSize);
 }
 
-void DiagnosticsScene::draw(LGFX_Sprite& canvas, const FrameStats& stats) const {
+void DiagnosticsScene::draw(LGFX_Sprite& canvas, const FrameStats& stats) {
   drawBackground(canvas);
 
   canvas.fillRect(static_cast<int32_t>(boxX_), static_cast<int32_t>(boxY_), kBoxSize, kBoxSize,

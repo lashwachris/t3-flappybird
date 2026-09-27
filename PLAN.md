@@ -70,6 +70,10 @@ keeps each module testable and easy to swap out.
 | **Top** (GPIO 0 / BOOT, USB-C on the left) | start | (ignored) | restart |
 | **Bottom** (GPIO 14 / KEY) | — | flap | — |
 
+After TOP starts a round, the game waits in a **Get Ready** state with the character
+hovering. The first BOTTOM press begins play. Without this, the character hit the
+ground 0.8 s after the start press, before the player could move to the other button.
+
 The top/bottom → GPIO mapping is set in one place (`Config.h`), so it's a one-line
 change if the on-device check shows it's swapped. Holding BOOT while pressing reset
 puts the ESP32-S3 into download mode. That only happens at reset, so it doesn't
