@@ -13,6 +13,8 @@ Hold the board in landscape with the USB-C port on the left.
 | Top (GPIO 0 / BOOT) | start | — | — | restart (after 0.4 s) |
 | Bottom (GPIO 14 / KEY) | — | first flap, starts play | flap | — |
 
+The best score is saved to flash and survives power-off.
+
 **Diagnostics screen:** hold **BOTTOM** while the board powers up or resets. It shows
 the test pattern, button indicators and frame timings.
 
@@ -35,11 +37,11 @@ Every push is also built by GitHub Actions. The `firmware` artifact includes
 | Path | Responsibility |
 |---|---|
 | `include/Config.h` | All pins and tuning constants (physics, pipes, visuals) |
-| `src/hal/` | Board-specific code: display setup, frame canvas, debounced buttons |
+| `src/hal/` | Board-specific code: display setup, frame canvas, debounced buttons, best-score storage (NVS) |
 | `src/input/` | Hardware-independent button snapshot passed to the game |
 | `src/game/` | Game rules: state machine, bird physics, pipes, collision. No display or GPIO code |
-| `src/render/` | Draws the game state; pixel-art baking; colours; text helpers |
-| `src/assets/` | Character skins as editable pixel art (character rows + palette) |
+| `src/render/` | Draws the game state: parallax background, pixel-art baking, score digits, colours, text |
+| `src/assets/` | Editable pixel art (character rows + palette): character skins, score digits |
 | `src/scenes/` | Full-screen modes: the game and the diagnostics screen |
 | `src/util/` | Frame limiter, frame stats, random number generator |
 

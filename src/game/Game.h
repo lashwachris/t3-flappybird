@@ -27,13 +27,20 @@ class Game {
   uint32_t best() const { return best_; }
   float time() const { return time_; }            // Seconds since boot (game time).
   float stateTime() const { return stateTime_; }  // Seconds in the current state.
-  float groundScroll() const { return groundScroll_; }
+  // Total distance the world has scrolled, in px. Renderers derive each
+  // parallax layer's offset from it. Double so it stays exact for days.
+  double scrollDistance() const { return scrollDistance_; }
+  // True from a crash that beat the previous best until the next round.
+  bool isNewBest() const { return newBest_; }
+  // Restores a best score persisted from an earlier session.
+  void setBest(uint32_t best) { best_ = best; }
   bool canRestart() const;
 
  private:
   void enter(GameState state);
   void startRound();
   void hover();
+  void scroll(float dt);
   void updateTitle(const InputState& input, float dt);
   void updateReady(const InputState& input, float dt);
   void updatePlaying(const InputState& input, float dt);
@@ -48,5 +55,6 @@ class Game {
   uint32_t best_ = 0;
   float time_ = 0.0f;
   float stateTime_ = 0.0f;
-  float groundScroll_ = 0.0f;
+  double scrollDistance_ = 0.0;
+  bool newBest_ = false;
 };

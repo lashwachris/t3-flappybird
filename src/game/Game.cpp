@@ -6,11 +6,6 @@
 
 namespace {
 constexpr float kStartY = cfg::game::kGroundY / 2.0f;
-
-// Keeps the scroll offset small so float precision never degrades.
-float advanceScroll(float scroll, float dt) {
-  return std::fmod(scroll + cfg::game::kScrollSpeed * dt, cfg::render::kGroundPatternWidth);
-}
 }  // namespace
 
 Game::Game(const CharacterSkin& skin) : bird_(skin) { bird_.reset(kStartY); }
@@ -48,10 +43,13 @@ void Game::enter(GameState state) {
 // move from the TOP button to the BOTTOM one.
 void Game::startRound() {
   score_ = 0;
+  newBest_ = false;
   bird_.reset(kStartY);
   pipes_.reset(rng_);
   enter(GameState::Ready);
 }
+
+void Game::scroll(float dt) { scrollDistance_ += cfg::game::kScrollSpeed * dt; }
 
 // Gentle idle bob used while waiting for the player.
 void Game::hover() {
@@ -60,7 +58,7 @@ void Game::hover() {
 }
 
 void Game::updateTitle(const InputState& input, float dt) {
-  groundScroll_ = advanceScroll(groundScroll_, dt);
+  scroll(dt);
   hover();
 
   if (input.top.pressed) {
@@ -69,7 +67,7 @@ void Game::updateTitle(const InputState& input, float dt) {
 }
 
 void Game::updateReady(const InputState& input, float dt) {
-  groundScroll_ = advanceScroll(groundScroll_, dt);
+  scroll(dt);
 
   if (input.bottom.pressed) {
     bird_.reset(bird_.y());
@@ -81,7 +79,7 @@ void Game::updateReady(const InputState& input, float dt) {
 }
 
 void Game::updatePlaying(const InputState& input, float dt) {
-  groundScroll_ = advanceScroll(groundScroll_, dt);
+  scroll(dt);
 
   if (input.bottom.pressed) {
     bird_.flap();
@@ -108,6 +106,7 @@ void Game::updateGameOver(const InputState& input, float dt) {
 void Game::die() {
   if (score_ > best_) {
     best_ = score_;
+    newBest_ = true;
   }
   enter(GameState::GameOver);
 }

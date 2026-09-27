@@ -71,6 +71,12 @@ constexpr float kTitleBobAmplitude = 4.0f;
 constexpr float kTitleBobSpeed = 4.0f;  // rad/s
 constexpr bool kShowFps = false;        // Small FPS readout in the corner.
 constexpr float kGroundPatternWidth = 16.0f;  // Ground texture repeats every N px.
+constexpr float kDeathFlashTime = 0.08f;      // White flash when crashing.
+
+// Parallax: fraction of the world scroll speed each background layer moves at.
+constexpr float kCloudParallax = 0.1f;
+constexpr float kSkylineParallax = 0.25f;
+constexpr float kBushParallax = 0.5f;
 }  // namespace render
 
 namespace input {

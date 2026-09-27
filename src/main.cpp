@@ -4,6 +4,7 @@
 #include "assets/BirdSkin.h"
 #include "hal/Button.h"
 #include "hal/Display.h"
+#include "hal/HighScoreStore.h"
 #include "input/InputState.h"
 #include "scenes/DiagnosticsScene.h"
 #include "scenes/GameScene.h"
@@ -19,7 +20,8 @@ Button buttonBottom(cfg::pins::kButtonBottom);
 FrameLimiter frameLimiter(cfg::timing::kTargetFps);
 FrameStats frameStats(cfg::timing::kStatsWindowMs);
 
-GameScene gameScene(kBirdSkin);
+HighScoreStore highScoreStore;
+GameScene gameScene(kBirdSkin, highScoreStore);
 DiagnosticsScene diagnosticsScene;
 Scene* scene = &gameScene;
 
@@ -53,7 +55,7 @@ void setup() {
   if (buttonBottom.isDown()) {
     scene = &diagnosticsScene;
   } else if (!gameScene.begin(esp_random())) {
-    halt("Game init failed: could not allocate character sprites");
+    halt("Game init failed: could not allocate game sprites");
   }
 
   frameLimiter.reset(micros());

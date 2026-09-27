@@ -12,7 +12,6 @@
 namespace {
 
 namespace palette {
-constexpr uint16_t kSky = colors::rgb565(112, 197, 206);
 constexpr uint16_t kPipe = colors::rgb565(116, 191, 46);
 constexpr uint16_t kPipeLight = colors::rgb565(170, 230, 90);
 constexpr uint16_t kPipeDark = colors::rgb565(70, 130, 30);
@@ -24,6 +23,8 @@ constexpr uint16_t kPanel = colors::rgb565(222, 216, 149);
 constexpr uint16_t kPanelBorder = colors::rgb565(84, 56, 71);
 constexpr uint16_t kText = colors::kWhite;
 constexpr uint16_t kTextDark = colors::rgb565(84, 56, 71);
+constexpr uint16_t kBadge = colors::rgb565(230, 60, 50);
+constexpr uint16_t kFlash = colors::kWhite;
 }  // namespace palette
 
 constexpr int16_t kPipeCapHeight = 10;
@@ -76,15 +77,16 @@ bool GameRenderer::begin(const CharacterSkin& skin) {
       return false;
     }
   }
-  return frameCount_ > 0;
+  return frameCount_ > 0 && background_.begin() && scoreDigits_.begin(palette::kOutline) &&
+         panelDigits_.begin(palette::kOutline);
 }
 
 void GameRenderer::draw(LGFX_Sprite& canvas, const Game& game, const FrameStats& stats) {
-  drawSky(canvas);
+  background_.draw(canvas, game.scrollDistance());
   if (game.state() == GameState::Playing || game.state() == GameState::GameOver) {
     drawPipes(canvas, game.pipes());
   }
-  drawGround(canvas, game.groundScroll());
+  drawGround(canvas, game.scrollDistance());
   drawCharacter(canvas, game);
 
   switch (game.state()) {
@@ -102,12 +104,15 @@ void GameRenderer::draw(LGFX_Sprite& canvas, const Game& game, const FrameStats&
       break;
   }
 
+  if (game.state() == GameState::GameOver &&
+      game.stateTime() < cfg::render::kDeathFlashTime) {
+    canvas.fillScreen(palette::kFlash);
+  }
+
   if (cfg::render::kShowFps) {
     drawFps(canvas, stats);
   }
 }
-
-void GameRenderer::drawSky(LGFX_Sprite& canvas) const { canvas.fillScreen(palette::kSky); }
 
 void GameRenderer::drawPipes(LGFX_Sprite& canvas, const Pipes& pipes) const {
   for (const Pipe& pipe : pipes.items()) {
@@ -119,14 +124,15 @@ void GameRenderer::drawPipes(LGFX_Sprite& canvas, const Pipes& pipes) const {
   }
 }
 
-void GameRenderer::drawGround(LGFX_Sprite& canvas, float scroll) const {
+void GameRenderer::drawGround(LGFX_Sprite& canvas, double scrollDistance) const {
   const int32_t groundY = static_cast<int32_t>(cfg::game::kGroundY);
   const int32_t w = canvas.width();
   const int32_t pattern = static_cast<int32_t>(cfg::render::kGroundPatternWidth);
   const int32_t half = pattern / 2;
+  const int32_t scroll = static_cast<int32_t>(std::fmod(scrollDistance, pattern));
 
   canvas.fillRect(0, groundY, w, canvas.height() - groundY, palette::kDirt);
-  for (int32_t x = -static_cast<int32_t>(scroll); x < w; x += pattern) {
+  for (int32_t x = -scroll; x < w; x += pattern) {
     canvas.fillRect(x, groundY, half, kGrassHeight, palette::kGrassLight);
     canvas.fillRect(x + half, groundY, half, kGrassHeight, palette::kGrassDark);
   }
@@ -144,12 +150,8 @@ void GameRenderer::drawCharacter(LGFX_Sprite& canvas, const Game& game) {
                                 sprite_baker::kTransparent);
 }
 
-void GameRenderer::drawScore(LGFX_Sprite& canvas, uint32_t score) const {
-  char buf[12];
-  snprintf(buf, sizeof(buf), "%lu", static_cast<unsigned long>(score));
-  canvas.setFont(&fonts::Font4);
-  canvas.setTextDatum(textdatum_t::top_center);
-  text::drawOutlined(canvas, buf, canvas.width() / 2, 6, palette::kText, palette::kOutline);
+void GameRenderer::drawScore(LGFX_Sprite& canvas, uint32_t score) {
+  scoreDigits_.draw(canvas, score, canvas.width() / 2, 6);
 }
 
 void GameRenderer::drawTitle(LGFX_Sprite& canvas, const Game& game) const {
@@ -168,13 +170,13 @@ void GameRenderer::drawTitle(LGFX_Sprite& canvas, const Game& game) const {
   text::drawOutlined(canvas, "BOTTOM to flap", cx, 124, palette::kText, palette::kOutline);
 }
 
-void GameRenderer::drawReady(LGFX_Sprite& canvas, const Game& game) const {
+void GameRenderer::drawReady(LGFX_Sprite& canvas, const Game& game) {
   const int32_t cx = canvas.width() / 2;
   drawScore(canvas, game.score());
 
   canvas.setFont(&fonts::Font4);
   canvas.setTextDatum(textdatum_t::top_center);
-  text::drawOutlined(canvas, "GET READY", cx, 40, palette::kText, palette::kOutline);
+  text::drawOutlined(canvas, "GET READY", cx, 44, palette::kText, palette::kOutline);
 
   canvas.setFont(&fonts::Font2);
   if (std::fmod(game.stateTime(), 1.0f) < 0.7f) {
@@ -183,12 +185,15 @@ void GameRenderer::drawReady(LGFX_Sprite& canvas, const Game& game) const {
   }
 }
 
-void GameRenderer::drawGameOver(LGFX_Sprite& canvas, const Game& game) const {
-  constexpr int32_t kPanelW = 160;
-  constexpr int32_t kPanelH = 96;
+void GameRenderer::drawGameOver(LGFX_Sprite& canvas, const Game& game) {
+  constexpr int32_t kPanelW = 170;
+  constexpr int32_t kPanelH = 106;
+  constexpr int32_t kColumnOffset = 40;  // Score and best columns, either side of centre.
   const int32_t x = (canvas.width() - kPanelW) / 2;
   const int32_t y = (static_cast<int32_t>(cfg::game::kGroundY) - kPanelH) / 2;
   const int32_t cx = canvas.width() / 2;
+  const int32_t scoreX = cx - kColumnOffset;
+  const int32_t bestX = cx + kColumnOffset;
 
   canvas.fillRoundRect(x, y, kPanelW, kPanelH, 6, palette::kPanel);
   canvas.drawRoundRect(x, y, kPanelW, kPanelH, 6, palette::kPanelBorder);
@@ -198,15 +203,28 @@ void GameRenderer::drawGameOver(LGFX_Sprite& canvas, const Game& game) const {
   canvas.setFont(&fonts::Font4);
   text::drawOutlined(canvas, "GAME OVER", cx, y + 6, palette::kText, palette::kOutline);
 
-  char line[32];
   canvas.setFont(&fonts::Font2);
   canvas.setTextColor(palette::kTextDark);
-  snprintf(line, sizeof(line), "Score %lu    Best %lu", static_cast<unsigned long>(game.score()),
-           static_cast<unsigned long>(game.best()));
-  canvas.drawString(line, cx, y + 40);
+  canvas.drawString("SCORE", scoreX, y + 36);
+  canvas.drawString("BEST", bestX, y + 36);
+  panelDigits_.draw(canvas, game.score(), scoreX, y + 54);
+  panelDigits_.draw(canvas, game.best(), bestX, y + 54);
+
+  if (game.isNewBest()) {
+    constexpr int32_t kBadgeW = 26;
+    constexpr int32_t kBadgeH = 11;
+    const int32_t bx = bestX + 17;
+    const int32_t by = y + 37;
+    canvas.fillRoundRect(bx, by, kBadgeW, kBadgeH, 3, palette::kBadge);
+    canvas.setFont(&fonts::Font0);
+    canvas.setTextColor(palette::kText);
+    canvas.drawString("NEW", bx + kBadgeW / 2, by + 2);
+  }
 
   if (game.canRestart()) {
-    canvas.drawString("TOP to restart", cx, y + 66);
+    canvas.setFont(&fonts::Font2);
+    canvas.setTextColor(palette::kTextDark);
+    canvas.drawString("TOP to restart", cx, y + kPanelH - 22);
   }
 }
 

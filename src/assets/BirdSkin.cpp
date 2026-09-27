@@ -26,6 +26,21 @@ constexpr const char* kWingUp[] = {
     "......KKKKK......",
 };
 
+constexpr const char* kWingMid[] = {
+    ".....KKKKKK......",
+    "...KKYYYYKWWK....",
+    "..KYYYYYKWWWWK...",
+    ".KYYYYYYKWWKWK...",
+    ".KKKKKYYKWWKWK...",
+    "KWWWWWKYYKWWWK...",
+    "KWWWWWKYYYKKKKKK.",
+    ".KKKKKYYYKOOOOOOK",
+    "..KYYYYYYOKKKKKK.",
+    "...KYYYYYKOOOOOK.",
+    "....KKYYYYKKKKK..",
+    "......KKKKK......",
+};
+
 constexpr const char* kWingDown[] = {
     ".....KKKKKK......",
     "...KKYYYYKWWK....",
@@ -43,9 +58,12 @@ constexpr const char* kWingDown[] = {
 
 constexpr uint8_t kPaletteSize = sizeof(kPalette) / sizeof(kPalette[0]);
 
+// Flap cycle: up, mid, down, mid.
 constexpr PixelArt kFrames[] = {
     {17, 12, kWingUp, kPalette, kPaletteSize},
+    {17, 12, kWingMid, kPalette, kPaletteSize},
     {17, 12, kWingDown, kPalette, kPaletteSize},
+    {17, 12, kWingMid, kPalette, kPaletteSize},
 };
 
 }  // namespace
@@ -53,6 +71,6 @@ constexpr PixelArt kFrames[] = {
 const CharacterSkin kBirdSkin = {
     kFrames,
     sizeof(kFrames) / sizeof(kFrames[0]),
-    0.12f,
+    0.09f,
     {2.0f, 2.0f, 13.0f, 8.0f},
 };
