@@ -111,7 +111,18 @@ read as a restart.
    2–3 wing-flap frames and a tilt driven by vertical speed. The collision hitbox is
    a tight rectangle around the body, so wingtips and horns don't cause unfair
    deaths. The cow's hitbox is taller than the bird's (8 px), so re-check the gap
-   limits (`kPipeGap`, `kMinPipeGap`) against it and adjust if needed. Optional background extras from the concept: clouds, a city skyline,
+   limits (`kPipeGap`, `kMinPipeGap`) against it and adjust if needed.
+   **Requested:** resize the pipe gaps to make up for the larger sprite.
+   **Done:** a 28×20 cow with a 20×11 hitbox. Gaps now come from the hitbox:
+   `gap = h + 0.15·w + clearance` (clearance 40 → 32 over the ramp). The bird keeps
+   50 → 42 px; the cow gets 54 → 46 px. Over 200 simulated runs each, both characters
+   had the same survival rate. `Bird` was renamed `Player`.
+6. **Day/night cycle (Halloween theme).** At a score of 20, the colour palette fades
+   smoothly to a darker, Halloween-style theme. At 40 it fades back to the normal
+   bright palette. Planned approach: bake the background layers as palette-indexed
+   sprites, so each frame only interpolates a small palette of colours between the
+   two themes instead of re-drawing the tiles. Pipes, ground and panel colours come
+   from the same interpolated theme. Optional background extras from the concept: clouds, a city skyline,
    trees, and a grass-and-dirt ground strip, as parallax layers.
 
 ### Keeping the character swappable

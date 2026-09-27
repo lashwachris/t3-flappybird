@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "Config.h"
-#include "assets/BirdSkin.h"
+#include "assets/CowSkin.h"
 #include "hal/Button.h"
 #include "hal/Display.h"
 #include "hal/HighScoreStore.h"
@@ -21,7 +21,7 @@ FrameLimiter frameLimiter(cfg::timing::kTargetFps);
 FrameStats frameStats(cfg::timing::kStatsWindowMs);
 
 HighScoreStore highScoreStore;
-GameScene gameScene(kBirdSkin, highScoreStore);
+GameScene gameScene(kCowSkin, highScoreStore);
 DiagnosticsScene diagnosticsScene;
 Scene* scene = &gameScene;
 

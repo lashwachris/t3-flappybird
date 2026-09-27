@@ -47,25 +47,32 @@ namespace game {
 constexpr float kGroundHeight = 16.0f;
 constexpr float kGroundY = display::kHeight - kGroundHeight;
 
-constexpr float kBirdX = 80.0f;  // Horizontal centre of the character.
+constexpr float kPlayerX = 80.0f;  // Horizontal centre of the character.
 constexpr float kGravity = 600.0f;
 constexpr float kFlapVelocity = -150.0f;
 constexpr float kMaxFallSpeed = 260.0f;
 
 constexpr float kScrollSpeed = 70.0f;
 constexpr float kPipeWidth = 26.0f;
-constexpr float kPipeGap = 50.0f;
+// Pipe gaps are sized relative to the character's hitbox:
+//   gap = hitbox height + clearance + hitbox width * kPipeGapPerWidth
+// A wider character spends longer inside each pipe, so it gets a little more
+// room. Keeps difficulty equal across skins: the bird (13x8) gets the 50 -> 42 px
+// gaps that play-tested well; the cow (20x11) gets 54 -> 46 px, which matched the
+// bird's survival rate in simulation.
+constexpr float kPipeGapClearance = 40.0f;
+constexpr float kPipeGapPerWidth = 0.15f;
 constexpr float kPipeSpacing = 120.0f;   // Distance between consecutive pipes.
 constexpr float kPipeMargin = 18.0f;     // Minimum distance of a gap from the top or ground.
 constexpr float kFirstPipeX = display::kWidth + 40.0f;
 
-// Difficulty ramp: from kRampStartScore the speed rises and the gap narrows,
-// reaching the limits below at kRampFullScore. Gaps are fixed when each pipe
-// spawns, so a pipe never changes while it's on screen.
+// Difficulty ramp: from kRampStartScore the speed rises and the gap clearance
+// narrows, reaching the limits below at kRampFullScore. Gaps are fixed when each
+// pipe spawns, so a pipe never changes while it's on screen.
 constexpr uint32_t kRampStartScore = 10;
 constexpr uint32_t kRampFullScore = 50;
 constexpr float kMaxScrollSpeed = 85.0f;
-constexpr float kMinPipeGap = 42.0f;
+constexpr float kMinPipeGapClearance = 32.0f;
 
 constexpr float kRestartLockout = 0.4f;  // Ignore restart this long after dying.
 }  // namespace game

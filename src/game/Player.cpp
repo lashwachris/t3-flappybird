@@ -1,8 +1,8 @@
-#include "game/Bird.h"
+#include "game/Player.h"
 
 #include <algorithm>
 
-void Bird::step(float dt) {
+void Player::step(float dt) {
   vy_ = std::min(vy_ + cfg::game::kGravity * dt, cfg::game::kMaxFallSpeed);
   y_ += vy_ * dt;
 
@@ -16,7 +16,7 @@ void Bird::step(float dt) {
   }
 }
 
-Rect Bird::hitbox() const {
+Rect Player::hitbox() const {
   const Rect& local = skin_.hitbox;
   return {x() - skin_.width() / 2.0f + local.x, y_ - skin_.height() / 2.0f + local.y, local.w,
           local.h};

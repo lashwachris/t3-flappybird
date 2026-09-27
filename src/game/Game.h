@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "game/Bird.h"
+#include "game/Player.h"
 #include "game/CharacterSkin.h"
 #include "game/Difficulty.h"
 #include "game/Pipes.h"
@@ -22,7 +22,7 @@ class Game {
   void update(const InputState& input, float dt);
 
   GameState state() const { return state_; }
-  const Bird& bird() const { return bird_; }
+  const Player& player() const { return player_; }
   const Pipes& pipes() const { return pipes_; }
   uint32_t score() const { return score_; }
   uint32_t best() const { return best_; }
@@ -42,13 +42,14 @@ class Game {
   void startRound();
   void hover();
   void scroll(float dx);
+  Difficulty difficulty() const;
   void updateTitle(const InputState& input, float dt);
   void updateReady(const InputState& input, float dt);
   void updatePlaying(const InputState& input, float dt);
   void updateGameOver(const InputState& input, float dt);
   void die();
 
-  Bird bird_;
+  Player player_;
   Pipes pipes_;
   Random rng_;
   GameState state_ = GameState::Title;

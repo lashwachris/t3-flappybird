@@ -6,9 +6,9 @@
 
 // The player character's physics. Horizontal position is fixed (the world
 // scrolls instead); only the vertical axis moves.
-class Bird {
+class Player {
  public:
-  explicit Bird(const CharacterSkin& skin) : skin_(skin) {}
+  explicit Player(const CharacterSkin& skin) : skin_(skin) {}
 
   void reset(float y) {
     y_ = y;
@@ -20,10 +20,10 @@ class Bird {
   // Applies gravity and moves. Stops at the ceiling and rests on the ground.
   void step(float dt);
 
-  // Places the bird without physics (used for the title-screen bob).
+  // Places the character without physics (used for the title-screen bob).
   void setY(float y) { y_ = y; }
 
-  float x() const { return cfg::game::kBirdX; }
+  float x() const { return cfg::game::kPlayerX; }
   float y() const { return y_; }
   float velocity() const { return vy_; }
   bool onGround() const { return hitbox().bottom() >= cfg::game::kGroundY; }

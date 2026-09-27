@@ -12,7 +12,7 @@
 struct Pipe {
   float x = 0.0f;           // Left edge.
   float gapCenterY = 0.0f;  // Vertical centre of the opening.
-  float gapHeight = cfg::game::kPipeGap;
+  float gapHeight = 0.0f;
   bool scored = false;
 
   Rect topRect() const {

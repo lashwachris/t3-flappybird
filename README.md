@@ -1,6 +1,6 @@
 # t3-flappybird
 
-A simple Flappy Bird clone for the LilyGo T-Display S3 (ESP32-S3, 320×170 ST7789).
+A Flappy Bird-style game starring a winged cow, for the LilyGo T-Display S3 (ESP32-S3, 320×170 ST7789).
 
 See [PLAN.md](PLAN.md) for the design and the iteration roadmap.
 
@@ -16,8 +16,13 @@ Hold the board in landscape with the USB-C port on the left.
 The best score is saved to flash and survives power-off.
 
 **Difficulty:** from 10 points, the scroll speed rises (70 → 85 px/s) and new pipes
-get narrower gaps (50 → 42 px). Both reach their limits at 50 points and stay there.
-All values are in `cfg::game` in `include/Config.h`.
+get narrower gaps. Both reach their limits at 50 points and stay there. Gaps are sized
+from the character's hitbox, so every character plays the same. The cow gets
+54 → 46 px gaps. All values are in `cfg::game` in `include/Config.h`.
+
+**Changing the character:** skins live in `src/assets/` (`CowSkin`, and the original
+placeholder `BirdSkin`). To switch, change the skin passed to `GameScene` in `src/main.cpp`.
+Gap sizes adjust automatically.
 
 **Diagnostics screen:** hold **BOTTOM** while the board powers up or resets. It shows
 the test pattern, button indicators and frame timings.
@@ -43,7 +48,7 @@ Every push is also built by GitHub Actions. The `firmware` artifact includes
 | `include/Config.h` | All pins and tuning constants (physics, pipes, visuals) |
 | `src/hal/` | Board-specific code: display setup, frame canvas, debounced buttons, best-score storage (NVS) |
 | `src/input/` | Hardware-independent button snapshot passed to the game |
-| `src/game/` | Game rules: state machine, bird physics, pipes, collision. No display or GPIO code |
+| `src/game/` | Game rules: state machine, player physics, pipes, collision, difficulty. No display or GPIO code |
 | `src/render/` | Draws the game state: parallax background, pixel-art baking, score digits, colours, text |
 | `src/assets/` | Editable pixel art (character rows + palette): character skins, score digits |
 | `src/scenes/` | Full-screen modes: the game and the diagnostics screen |

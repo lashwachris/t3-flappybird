@@ -8,7 +8,7 @@ namespace {
 constexpr float kStartY = cfg::game::kGroundY / 2.0f;
 }  // namespace
 
-Game::Game(const CharacterSkin& skin) : bird_(skin) { bird_.reset(kStartY); }
+Game::Game(const CharacterSkin& skin) : player_(skin) { player_.reset(kStartY); }
 
 void Game::update(const InputState& input, float dt) {
   time_ += dt;
@@ -44,16 +44,20 @@ void Game::enter(GameState state) {
 void Game::startRound() {
   score_ = 0;
   newBest_ = false;
-  bird_.reset(kStartY);
-  pipes_.reset(Difficulty::forScore(0), rng_);
+  player_.reset(kStartY);
+  pipes_.reset(difficulty(), rng_);
   enter(GameState::Ready);
 }
 
 void Game::scroll(float dx) { scrollDistance_ += dx; }
 
+Difficulty Game::difficulty() const {
+  return Difficulty::forScore(score_, player_.skin().hitbox);
+}
+
 // Gentle idle bob used while waiting for the player.
 void Game::hover() {
-  bird_.setY(kStartY + cfg::render::kTitleBobAmplitude *
+  player_.setY(kStartY + cfg::render::kTitleBobAmplitude *
                            std::sin(stateTime_ * cfg::render::kTitleBobSpeed));
 }
 
@@ -70,8 +74,8 @@ void Game::updateReady(const InputState& input, float dt) {
   scroll(cfg::game::kScrollSpeed * dt);
 
   if (input.bottom.pressed) {
-    bird_.reset(bird_.y());
-    bird_.flap();
+    player_.reset(player_.y());
+    player_.flap();
     enter(GameState::Playing);
   } else {
     hover();
@@ -79,25 +83,25 @@ void Game::updateReady(const InputState& input, float dt) {
 }
 
 void Game::updatePlaying(const InputState& input, float dt) {
-  const Difficulty difficulty = Difficulty::forScore(score_);
-  const float dx = difficulty.scrollSpeed * dt;
+  const Difficulty current = difficulty();
+  const float dx = current.scrollSpeed * dt;
   scroll(dx);
 
   if (input.bottom.pressed) {
-    bird_.flap();
+    player_.flap();
   }
-  bird_.step(dt);
-  score_ += pipes_.update(dx, bird_.x(), difficulty, rng_);
+  player_.step(dt);
+  score_ += pipes_.update(dx, player_.x(), current, rng_);
 
-  if (bird_.onGround() || pipes_.collides(bird_.hitbox())) {
+  if (player_.onGround() || pipes_.collides(player_.hitbox())) {
     die();
   }
 }
 
 void Game::updateGameOver(const InputState& input, float dt) {
   // The world freezes; the character drops to the ground.
-  if (!bird_.onGround()) {
-    bird_.step(dt);
+  if (!player_.onGround()) {
+    player_.step(dt);
   }
 
   if (canRestart() && input.top.pressed) {

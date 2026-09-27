@@ -63,7 +63,7 @@ float characterTilt(const Game& game) {
     case GameState::Playing:
       break;
   }
-  return std::clamp(game.bird().velocity() * cfg::render::kTiltPerSpeed, cfg::render::kMinTilt,
+  return std::clamp(game.player().velocity() * cfg::render::kTiltPerSpeed, cfg::render::kMinTilt,
                     cfg::render::kMaxTilt);
 }
 
@@ -145,8 +145,8 @@ void GameRenderer::drawCharacter(LGFX_Sprite& canvas, const Game& game) {
   if (game.state() != GameState::GameOver && frameCount_ > 1) {
     frame = static_cast<uint32_t>(game.time() / frameDuration_) % frameCount_;
   }
-  const Bird& bird = game.bird();
-  frames_[frame].pushRotateZoom(&canvas, bird.x(), bird.y(), characterTilt(game), 1.0f, 1.0f,
+  const Player& player = game.player();
+  frames_[frame].pushRotateZoom(&canvas, player.x(), player.y(), characterTilt(game), 1.0f, 1.0f,
                                 sprite_baker::kTransparent);
 }
 
@@ -160,7 +160,7 @@ void GameRenderer::drawTitle(LGFX_Sprite& canvas, const Game& game) const {
   canvas.setFont(&fonts::Font4);
   canvas.setTextDatum(textdatum_t::top_center);
   canvas.setTextSize(1.5f);
-  text::drawOutlined(canvas, "FLAPPY", cx, 18, palette::kText, palette::kOutline);
+  text::drawOutlined(canvas, "FLAPPY COW", cx, 18, palette::kText, palette::kOutline);
   canvas.setTextSize(1.0f);
 
   canvas.setFont(&fonts::Font2);
