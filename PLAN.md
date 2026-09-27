@@ -67,11 +67,24 @@ keeps each module testable and easy to swap out.
 
 | Button | Title screen | Playing | Game over |
 |---|---|---|---|
-| **Top** | start | (ignored) | restart |
-| **Bottom** | — | flap | — |
+| **Top** (GPIO 0 / BOOT, USB-C on the left) | start | (ignored) | restart |
+| **Bottom** (GPIO 14 / KEY) | — | flap | — |
+
+The top/bottom → GPIO mapping is set in one place (`Config.h`), so it's a one-line
+change if the on-device check shows it's swapped. Holding BOOT while pressing reset
+puts the ESP32-S3 into download mode. That only happens at reset, so it doesn't
+affect gameplay.
 
 A short input lockout (~400 ms) after game over stops an accidental flap from being
 read as a restart.
+
+## Scope decisions
+
+- No battery is available for testing, so there are no battery or power extras. GPIO 15
+  is still driven HIGH at boot because the LCD needs it on battery. It is harmless on USB.
+- PlatformIO was chosen for easy review: every module is its own file, dependencies
+  are pinned in `platformio.ini`, and it works from VS Code (PlatformIO extension) or
+  the `pio` CLI.
 
 ## Iterations (each one ends with a commit and push)
 
