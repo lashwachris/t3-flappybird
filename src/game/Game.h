@@ -4,6 +4,7 @@
 
 #include "game/Bird.h"
 #include "game/CharacterSkin.h"
+#include "game/Difficulty.h"
 #include "game/Pipes.h"
 #include "input/InputState.h"
 #include "util/Random.h"
@@ -40,7 +41,7 @@ class Game {
   void enter(GameState state);
   void startRound();
   void hover();
-  void scroll(float dt);
+  void scroll(float dx);
   void updateTitle(const InputState& input, float dt);
   void updateReady(const InputState& input, float dt);
   void updatePlaying(const InputState& input, float dt);

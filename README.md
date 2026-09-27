@@ -15,6 +15,10 @@ Hold the board in landscape with the USB-C port on the left.
 
 The best score is saved to flash and survives power-off.
 
+**Difficulty:** from 10 points, the scroll speed rises (70 → 85 px/s) and new pipes
+get narrower gaps (50 → 42 px). Both reach their limits at 50 points and stay there.
+All values are in `cfg::game` in `include/Config.h`.
+
 **Diagnostics screen:** hold **BOTTOM** while the board powers up or resets. It shows
 the test pattern, button indicators and frame timings.
 
@@ -45,4 +49,5 @@ Every push is also built by GitHub Actions. The `firmware` artifact includes
 | `src/scenes/` | Full-screen modes: the game and the diagnostics screen |
 | `src/util/` | Frame limiter, frame stats, random number generator |
 
-To try different gameplay settings, edit `cfg::game` in `include/Config.h`.
+To try different gameplay settings, edit `cfg::game` in `include/Config.h`. The ramp itself
+is in `src/game/Difficulty.h`.

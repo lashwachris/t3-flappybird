@@ -59,6 +59,14 @@ constexpr float kPipeSpacing = 120.0f;   // Distance between consecutive pipes.
 constexpr float kPipeMargin = 18.0f;     // Minimum distance of a gap from the top or ground.
 constexpr float kFirstPipeX = display::kWidth + 40.0f;
 
+// Difficulty ramp: from kRampStartScore the speed rises and the gap narrows,
+// reaching the limits below at kRampFullScore. Gaps are fixed when each pipe
+// spawns, so a pipe never changes while it's on screen.
+constexpr uint32_t kRampStartScore = 10;
+constexpr uint32_t kRampFullScore = 50;
+constexpr float kMaxScrollSpeed = 85.0f;
+constexpr float kMinPipeGap = 42.0f;
+
 constexpr float kRestartLockout = 0.4f;  // Ignore restart this long after dying.
 }  // namespace game
 

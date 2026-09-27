@@ -101,15 +101,17 @@ read as a restart.
    primitives.
 3. **Polish.** Pixel-art bird with flap animation and tilt, pipe caps, scrolling
    ground, parallax background, large score digits, and a best score saved to NVS.
-4. **Tuning and cleanup.** Balance gravity, flap, gap size and speed, and optionally
-   ramp the difficulty. Update the README. (The GitHub Actions build was moved
-   forward into iteration 1.)
+4. **Tuning and cleanup.** Base physics kept as they were after play-testing. Added a
+   gentle difficulty ramp: from score 10 to 50, speed goes 70 → 85 px/s and the gap
+   narrows 50 → 42 px, then both stay capped. A pipe's gap is fixed when it spawns.
+   Updated the README. (The GitHub Actions build was moved forward into iteration 1.)
 5. **Winged cow character (final).** Replace the bird with a pixel-art flying cow,
    based on the concept image: a black-and-white cow with a pink muzzle, small horns
    and white wings. Scale it to about 30 × 24 px for the 170-px-tall screen. It gets
    2–3 wing-flap frames and a tilt driven by vertical speed. The collision hitbox is
    a tight rectangle around the body, so wingtips and horns don't cause unfair
-   deaths. Optional background extras from the concept: clouds, a city skyline,
+   deaths. The cow's hitbox is taller than the bird's (8 px), so re-check the gap
+   limits (`kPipeGap`, `kMinPipeGap`) against it and adjust if needed. Optional background extras from the concept: clouds, a city skyline,
    trees, and a grass-and-dirt ground strip, as parallax layers.
 
 ### Keeping the character swappable

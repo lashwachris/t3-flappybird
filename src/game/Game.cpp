@@ -45,11 +45,11 @@ void Game::startRound() {
   score_ = 0;
   newBest_ = false;
   bird_.reset(kStartY);
-  pipes_.reset(rng_);
+  pipes_.reset(Difficulty::forScore(0), rng_);
   enter(GameState::Ready);
 }
 
-void Game::scroll(float dt) { scrollDistance_ += cfg::game::kScrollSpeed * dt; }
+void Game::scroll(float dx) { scrollDistance_ += dx; }
 
 // Gentle idle bob used while waiting for the player.
 void Game::hover() {
@@ -58,7 +58,7 @@ void Game::hover() {
 }
 
 void Game::updateTitle(const InputState& input, float dt) {
-  scroll(dt);
+  scroll(cfg::game::kScrollSpeed * dt);
   hover();
 
   if (input.top.pressed) {
@@ -67,7 +67,7 @@ void Game::updateTitle(const InputState& input, float dt) {
 }
 
 void Game::updateReady(const InputState& input, float dt) {
-  scroll(dt);
+  scroll(cfg::game::kScrollSpeed * dt);
 
   if (input.bottom.pressed) {
     bird_.reset(bird_.y());
@@ -79,13 +79,15 @@ void Game::updateReady(const InputState& input, float dt) {
 }
 
 void Game::updatePlaying(const InputState& input, float dt) {
-  scroll(dt);
+  const Difficulty difficulty = Difficulty::forScore(score_);
+  const float dx = difficulty.scrollSpeed * dt;
+  scroll(dx);
 
   if (input.bottom.pressed) {
     bird_.flap();
   }
   bird_.step(dt);
-  score_ += pipes_.update(dt, bird_.x(), rng_);
+  score_ += pipes_.update(dx, bird_.x(), difficulty, rng_);
 
   if (bird_.onGround() || pipes_.collides(bird_.hitbox())) {
     die();
