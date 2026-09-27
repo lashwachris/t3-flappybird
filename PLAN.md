@@ -97,9 +97,25 @@ read as a restart.
    primitives.
 3. **Polish.** Pixel-art bird with flap animation and tilt, pipe caps, scrolling
    ground, parallax background, large score digits, and a best score saved to NVS.
-4. **Tuning and cleanup.** Balance gravity, flap, gap size and speed. Optionally
-   ramp difficulty. Add a GitHub Actions workflow that builds the firmware on every
-   push, and a README with flashing instructions.
+4. **Tuning and cleanup.** Balance gravity, flap, gap size and speed, and optionally
+   ramp the difficulty. Update the README. (The GitHub Actions build was moved
+   forward into iteration 1.)
+5. **Winged cow character (final).** Replace the bird with a pixel-art flying cow,
+   based on the concept image: a black-and-white cow with a pink muzzle, small horns
+   and white wings. Scale it to about 30 × 24 px for the 170-px-tall screen. It gets
+   2–3 wing-flap frames and a tilt driven by vertical speed. The collision hitbox is
+   a tight rectangle around the body, so wingtips and horns don't cause unfair
+   deaths. Optional background extras from the concept: clouds, a city skyline,
+   trees, and a grass-and-dirt ground strip, as parallax layers.
+
+### Keeping the character swappable
+
+From iteration 2 on, the player character is described by data, not code. A
+`CharacterSkin` holds the animation frames (RGB565 with a transparent key colour),
+the frame size, the frame timing and the hitbox inset. The renderer and the collision
+code read only that description. Swapping the bird for the cow in iteration 5 is then
+a new asset file plus one line, with no changes to physics, collision or rendering
+code.
 
 ## Verification
 
