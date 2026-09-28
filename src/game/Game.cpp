@@ -1,0 +1,126 @@
+#include "game/Game.h"
+
+#include <cmath>
+
+#include "Config.h"
+
+namespace {
+constexpr float kStartY = cfg::game::kGroundY / 2.0f;
+}  // namespace
+
+Game::Game(const CharacterSkin& skin) : player_(skin) { player_.reset(kStartY); }
+
+void Game::update(const InputState& input, float dt) {
+  time_ += dt;
+  stateTime_ += dt;
+
+  switch (state_) {
+    case GameState::Title:
+      updateTitle(input, dt);
+      break;
+    case GameState::Ready:
+      updateReady(input, dt);
+      break;
+    case GameState::Playing:
+      updatePlaying(input, dt);
+      break;
+    case GameState::GameOver:
+      updateGameOver(input, dt);
+      break;
+  }
+  dayNight_.update(wantsNight(), dt);
+}
+
+// Night follows the score during a round (and stays on the game-over screen);
+// the title and get-ready screens always return to day.
+bool Game::wantsNight() const {
+  const bool inRound = state_ == GameState::Playing || state_ == GameState::GameOver;
+  return inRound && DayNightCycle::isNightScore(score_);
+}
+
+bool Game::canRestart() const {
+  return state_ == GameState::GameOver && stateTime_ >= cfg::game::kRestartLockout;
+}
+
+void Game::enter(GameState state) {
+  state_ = state;
+  stateTime_ = 0.0f;
+}
+
+// Resets the round and waits for the first flap, so the player has time to
+// move from the TOP button to the BOTTOM one.
+void Game::startRound() {
+  score_ = 0;
+  newBest_ = false;
+  player_.reset(kStartY);
+  pipes_.reset(difficulty(), rng_);
+  enter(GameState::Ready);
+}
+
+void Game::scroll(float dx) { scrollDistance_ += dx; }
+
+Difficulty Game::difficulty() const {
+  return Difficulty::forScore(score_, player_.skin().hitbox);
+}
+
+// Gentle idle bob used while waiting for the player.
+void Game::hover() {
+  player_.setY(kStartY + cfg::render::kTitleBobAmplitude *
+                           std::sin(stateTime_ * cfg::render::kTitleBobSpeed));
+}
+
+void Game::updateTitle(const InputState& input, float dt) {
+  scroll(cfg::game::kScrollSpeed * dt);
+  hover();
+
+  if (input.top.pressed) {
+    startRound();
+  }
+}
+
+void Game::updateReady(const InputState& input, float dt) {
+  scroll(cfg::game::kScrollSpeed * dt);
+
+  if (input.bottom.pressed) {
+    player_.reset(player_.y());
+    player_.flap();
+    enter(GameState::Playing);
+  } else {
+    hover();
+  }
+}
+
+void Game::updatePlaying(const InputState& input, float dt) {
+  const Difficulty current = difficulty();
+  const float dx = current.scrollSpeed * dt;
+  scroll(dx);
+
+  if (input.bottom.pressed) {
+    player_.flap();
+  }
+  player_.step(dt);
+  score_ += pipes_.update(dx, player_.x(), current, rng_);
+
+  if (player_.onGround() || pipes_.collides(player_.hitbox())) {
+    die();
+  }
+}
+
+void Game::updateGameOver(const InputState& input, float dt) {
+  // The world freezes; the character drops to the ground.
+  if (!player_.onGround()) {
+    player_.step(dt);
+  }
+
+  if (canRestart() && input.top.pressed) {
+    startRound();
+  }
+}
+
+void Game::die() {
+  if (score_ > best_) {
+    best_ = score_;
+    newBest_ = true;
+  }
+  enter(GameState::GameOver);
+}
