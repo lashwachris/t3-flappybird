@@ -117,9 +117,9 @@ read as a restart.
    `gap = h + 0.15·w + clearance` (clearance 40 → 32 over the ramp). The bird keeps
    50 → 42 px; the cow gets 54 → 46 px. Over 200 simulated runs each, both characters
    had the same survival rate. `Bird` was renamed `Player`.
-6. **Day/night cycle (Halloween theme).** At a score of 20, the colour palette fades
-   smoothly to a darker, Halloween-style theme. At 40 it fades back to the normal
-   bright palette. Planned approach: bake the background layers as palette-indexed
+6. **Day/night cycle (Halloween theme).** Updated request: switch every **15** points
+   and keep repeating (night at 15–29, 45–59, ...). Each fade takes ≤ 2 s (set to 1.5 s,
+   smoothstep-eased). Also add a moon, bats and glowing windows. Planned approach: bake the background layers as palette-indexed
    sprites, so each frame only interpolates a small palette of colours between the
    two themes instead of re-drawing the tiles. Pipes, ground and panel colours come
    from the same interpolated theme. Optional background extras from the concept: clouds, a city skyline,

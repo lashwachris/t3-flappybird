@@ -4,6 +4,7 @@
 
 #include "game/Player.h"
 #include "game/CharacterSkin.h"
+#include "game/DayNightCycle.h"
 #include "game/Difficulty.h"
 #include "game/Pipes.h"
 #include "input/InputState.h"
@@ -31,6 +32,8 @@ class Game {
   // Total distance the world has scrolled, in px. Renderers derive each
   // parallax layer's offset from it. Double so it stays exact for days.
   double scrollDistance() const { return scrollDistance_; }
+  // 0 = full day, 1 = full night (linear; renderers ease it).
+  float nightAmount() const { return dayNight_.amount(); }
   // True from a crash that beat the previous best until the next round.
   bool isNewBest() const { return newBest_; }
   // Restores a best score persisted from an earlier session.
@@ -43,6 +46,7 @@ class Game {
   void hover();
   void scroll(float dx);
   Difficulty difficulty() const;
+  bool wantsNight() const;
   void updateTitle(const InputState& input, float dt);
   void updateReady(const InputState& input, float dt);
   void updatePlaying(const InputState& input, float dt);
@@ -52,6 +56,7 @@ class Game {
   Player player_;
   Pipes pipes_;
   Random rng_;
+  DayNightCycle dayNight_;
   GameState state_ = GameState::Title;
   uint32_t score_ = 0;
   uint32_t best_ = 0;

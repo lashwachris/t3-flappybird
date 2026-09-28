@@ -6,6 +6,7 @@
 #include "hal/LGFX_TDisplayS3.h"
 #include "render/Background.h"
 #include "render/NumberRenderer.h"
+#include "render/Theme.h"
 #include "util/FrameStats.h"
 
 // Draws a Game into the frame canvas. Reads game state only; never changes it.
@@ -20,8 +21,8 @@ class GameRenderer {
  private:
   static constexpr uint8_t kMaxFrames = 4;
 
-  void drawPipes(LGFX_Sprite& canvas, const Pipes& pipes) const;
-  void drawGround(LGFX_Sprite& canvas, double scrollDistance) const;
+  void drawPipes(LGFX_Sprite& canvas, const Pipes& pipes, const Theme& theme) const;
+  void drawGround(LGFX_Sprite& canvas, double scrollDistance, const Theme& theme) const;
   void drawCharacter(LGFX_Sprite& canvas, const Game& game);
   void drawScore(LGFX_Sprite& canvas, uint32_t score);
   void drawTitle(LGFX_Sprite& canvas, const Game& game) const;

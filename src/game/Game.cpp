@@ -28,6 +28,14 @@ void Game::update(const InputState& input, float dt) {
       updateGameOver(input, dt);
       break;
   }
+  dayNight_.update(wantsNight(), dt);
+}
+
+// Night follows the score during a round (and stays on the game-over screen);
+// the title and get-ready screens always return to day.
+bool Game::wantsNight() const {
+  const bool inRound = state_ == GameState::Playing || state_ == GameState::GameOver;
+  return inRound && DayNightCycle::isNightScore(score_);
 }
 
 bool Game::canRestart() const {

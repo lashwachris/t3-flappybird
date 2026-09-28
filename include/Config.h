@@ -75,6 +75,11 @@ constexpr float kMaxScrollSpeed = 85.0f;
 constexpr float kMinPipeGapClearance = 32.0f;
 
 constexpr float kRestartLockout = 0.4f;  // Ignore restart this long after dying.
+
+// Day/night cycle: the world fades to the Halloween night theme every
+// kNightCycleScore points and back again (night at 15-29, 45-59, ...).
+constexpr uint32_t kNightCycleScore = 15;
+constexpr float kThemeFadeTime = 1.5f;  // Seconds per fade (requested max: 2 s).
 }  // namespace game
 
 // Purely visual settings.

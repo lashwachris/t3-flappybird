@@ -3,22 +3,23 @@
 #include <cmath>
 
 #include "Config.h"
-#include "render/Colors.h"
-#include "render/SpriteBaker.h"
+#include "render/SkyGradient.h"
 #include "util/Random.h"
 
 namespace {
 
-namespace palette {
-constexpr uint8_t kSkyTop[3] = {84, 180, 236};
-constexpr uint8_t kSkyHorizon[3] = {176, 228, 246};
-constexpr uint16_t kCloud = colors::kWhite;
-constexpr uint16_t kCloudShade = colors::rgb565(206, 232, 244);
-constexpr uint16_t kBuilding = colors::rgb565(150, 205, 230);
-constexpr uint16_t kWindow = colors::rgb565(190, 230, 244);
-constexpr uint16_t kBush = colors::rgb565(116, 196, 84);
-constexpr uint16_t kBushDark = colors::rgb565(84, 164, 64);
-}  // namespace palette
+// Palette indices used inside the 4-bit layer tiles. Index 0 is transparent in
+// every tile; the rest are filled from the current theme each frame.
+namespace ink {
+constexpr uint8_t kClear = 0;
+constexpr uint8_t kCloud = 1;
+constexpr uint8_t kCloudShade = 2;
+constexpr uint8_t kBuilding = 1;
+constexpr uint8_t kWindowLit = 2;
+constexpr uint8_t kWindowDim = 3;
+constexpr uint8_t kBush = 1;
+constexpr uint8_t kBushDark = 2;
+}  // namespace ink
 
 // Tile sizes. Widths must divide evenly into the pattern for seamless wrapping.
 constexpr int32_t kCloudW = 320;
@@ -28,6 +29,7 @@ constexpr int32_t kCloudY = 12;
 constexpr int32_t kSkylineW = 160;
 constexpr int32_t kSkylineH = 44;
 constexpr int32_t kSkylineGap = 6;  // Skyline sits this far above the bushes' base.
+constexpr float kLitWindowShare = 0.55f;  // Fraction of windows that glow at night.
 
 constexpr int32_t kBushW = 128;
 constexpr int32_t kBushH = 22;
@@ -35,24 +37,27 @@ constexpr int32_t kBushH = 22;
 // Fixed seeds so the scenery looks the same on every boot.
 constexpr uint32_t kSkylineSeed = 0x5EED0001u;
 constexpr uint32_t kBushSeed = 0x5EED0002u;
+constexpr uint32_t kWindowSeed = 0x5EED0003u;  // Separate, so lighting doesn't move buildings.
 
 bool allocateTile(LGFX_Sprite& tile, int32_t w, int32_t h) {
-  tile.setColorDepth(16);
+  tile.setColorDepth(4);
   tile.setPsram(false);
-  if (tile.createSprite(w, h) == nullptr) {
+  if (tile.createSprite(w, h) == nullptr || !tile.createPalette()) {
     return false;
   }
-  tile.fillSprite(sprite_baker::kTransparent);
+  tile.fillSprite(ink::kClear);
   return true;
 }
 
-uint8_t lerp(uint8_t a, uint8_t b, float t) { return static_cast<uint8_t>(a + (b - a) * t); }
+void setInk(LGFX_Sprite& tile, uint8_t index, Rgb color) {
+  tile.setPaletteColor(index, color.r, color.g, color.b);
+}
 
 // A puffy cloud: three overlapping circles on a flat base, with a shaded underside.
 void drawCloud(LGFX_Sprite& tile, int32_t cx, int32_t cy, int32_t s) {
   for (int pass = 0; pass < 2; ++pass) {
     const int32_t dy = pass == 0 ? 2 : 0;
-    const uint16_t color = pass == 0 ? palette::kCloudShade : palette::kCloud;
+    const uint8_t color = pass == 0 ? ink::kCloudShade : ink::kCloud;
     tile.fillCircle(cx - s, cy + dy, s * 6 / 10, color);
     tile.fillCircle(cx, cy - s * 4 / 10 + dy, s * 8 / 10, color);
     tile.fillCircle(cx + s, cy + dy, s * 6 / 10, color);
@@ -62,29 +67,33 @@ void drawCloud(LGFX_Sprite& tile, int32_t cx, int32_t cy, int32_t s) {
 
 }  // namespace
 
-bool Background::begin() {
-  for (int i = 0; i < kSkyBands; ++i) {
-    const float t = static_cast<float>(i) / (kSkyBands - 1);
-    skyBands_[i] = colors::rgb565(lerp(palette::kSkyTop[0], palette::kSkyHorizon[0], t),
-                                  lerp(palette::kSkyTop[1], palette::kSkyHorizon[1], t),
-                                  lerp(palette::kSkyTop[2], palette::kSkyHorizon[2], t));
-  }
-  return bakeClouds() && bakeSkyline() && bakeBushes();
-}
+bool Background::begin() { return bakeClouds() && bakeSkyline() && bakeBushes(); }
 
-void Background::draw(LGFX_Sprite& canvas, double scrollDistance) {
+void Background::draw(LGFX_Sprite& canvas, double scrollDistance, const Theme& theme,
+                      float night, float time) {
+  applyTheme(theme);
+
   const int32_t skyH = static_cast<int32_t>(cfg::game::kGroundY);
-  for (int i = 0; i < kSkyBands; ++i) {
-    const int32_t y0 = skyH * i / kSkyBands;
-    const int32_t y1 = skyH * (i + 1) / kSkyBands;
-    canvas.fillRect(0, y0, canvas.width(), y1 - y0, skyBands_[i]);
-  }
+  const SkyGradient sky(theme[ThemeColor::SkyTop], theme[ThemeColor::SkyHorizon], skyH);
+  sky.draw(canvas);
 
   const int32_t bushY = skyH - kBushH;
   const int32_t skylineY = skyH - kSkylineGap - kSkylineH;
+  nightSky_.drawMoon(canvas, sky, night);
   drawLayer(canvas, clouds_, scrollDistance, cfg::render::kCloudParallax, kCloudY);
   drawLayer(canvas, skyline_, scrollDistance, cfg::render::kSkylineParallax, skylineY);
+  nightSky_.drawBats(canvas, sky, night, time);
   drawLayer(canvas, bushes_, scrollDistance, cfg::render::kBushParallax, bushY);
+}
+
+void Background::applyTheme(const Theme& theme) {
+  setInk(clouds_, ink::kCloud, theme[ThemeColor::Cloud]);
+  setInk(clouds_, ink::kCloudShade, theme[ThemeColor::CloudShade]);
+  setInk(skyline_, ink::kBuilding, theme[ThemeColor::Building]);
+  setInk(skyline_, ink::kWindowLit, theme[ThemeColor::WindowLit]);
+  setInk(skyline_, ink::kWindowDim, theme[ThemeColor::WindowDim]);
+  setInk(bushes_, ink::kBush, theme[ThemeColor::Bush]);
+  setInk(bushes_, ink::kBushDark, theme[ThemeColor::BushDark]);
 }
 
 void Background::drawLayer(LGFX_Sprite& canvas, LGFX_Sprite& tile, double scrollDistance,
@@ -92,7 +101,7 @@ void Background::drawLayer(LGFX_Sprite& canvas, LGFX_Sprite& tile, double scroll
   const int32_t tileW = tile.width();
   const int32_t offset = static_cast<int32_t>(std::fmod(scrollDistance * parallax, tileW));
   for (int32_t x = -offset; x < canvas.width(); x += tileW) {
-    tile.pushSprite(&canvas, x, y, sprite_baker::kTransparent);
+    tile.pushSprite(&canvas, x, y, ink::kClear);
   }
 }
 
@@ -107,6 +116,7 @@ bool Background::bakeClouds() {
 bool Background::bakeSkyline() {
   if (!allocateTile(skyline_, kSkylineW, kSkylineH)) return false;
   Random rng(kSkylineSeed);
+  Random windowRng(kWindowSeed);
 
   int32_t x = 0;
   while (x < kSkylineW) {
@@ -115,10 +125,11 @@ bool Background::bakeSkyline() {
     const int32_t h = static_cast<int32_t>(rng.range(14.0f, static_cast<float>(kSkylineH)));
     const int32_t top = kSkylineH - h;
 
-    skyline_.fillRect(x, top, w, h, palette::kBuilding);
+    skyline_.fillRect(x, top, w, h, ink::kBuilding);
     for (int32_t wy = top + 4; wy < kSkylineH - 3; wy += 6) {
       for (int32_t wx = x + 3; wx + 2 <= x + w - 3; wx += 5) {
-        skyline_.fillRect(wx, wy, 2, 3, palette::kWindow);
+        const bool lit = windowRng.range(0.0f, 1.0f) < kLitWindowShare;
+        skyline_.fillRect(wx, wy, 2, 3, lit ? ink::kWindowLit : ink::kWindowDim);
       }
     }
     x += w + 1;  // 1-px gap between buildings.
@@ -144,7 +155,7 @@ bool Background::bakeBushes() {
   // Dark rims first, then fills, so bumps overlap cleanly. Each bump is also
   // drawn one tile-width left and right so the tile wraps seamlessly.
   for (int pass = 0; pass < 2; ++pass) {
-    const uint16_t color = pass == 0 ? palette::kBushDark : palette::kBush;
+    const uint8_t color = pass == 0 ? ink::kBushDark : ink::kBush;
     const int32_t grow = pass == 0 ? 1 : 0;
     for (const Bump& b : bumps) {
       for (int32_t wrap = -kBushW; wrap <= kBushW; wrap += kBushW) {
@@ -152,6 +163,6 @@ bool Background::bakeBushes() {
       }
     }
   }
-  bushes_.fillRect(0, kBushH - 6, kBushW, 6, palette::kBush);  // Solid base.
+  bushes_.fillRect(0, kBushH - 6, kBushW, 6, ink::kBush);  // Solid base.
   return true;
 }

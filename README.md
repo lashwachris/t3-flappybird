@@ -20,6 +20,12 @@ get narrower gaps. Both reach their limits at 50 points and stay there. Gaps are
 from the character's hitbox, so every character plays the same. The cow gets
 54 → 46 px gaps. All values are in `cfg::game` in `include/Config.h`.
 
+**Day/night cycle:** every 15 points the world fades (1.5 s) between the bright day theme
+and a Halloween night theme: purple-to-pumpkin dusk sky, a moon, bats, city silhouettes
+with glowing windows, and darker pipes and ground. Night covers scores 15–29, 45–59, and so
+on. Starting a new round fades back to day. The colours are in `src/render/Theme.cpp`, and the
+timing is in `cfg::game` (`kNightCycleScore`, `kThemeFadeTime`).
+
 **Changing the character:** skins live in `src/assets/` (`CowSkin`, and the original
 placeholder `BirdSkin`). To switch, change the skin passed to `GameScene` in `src/main.cpp`.
 Gap sizes adjust automatically.
@@ -49,7 +55,7 @@ Every push is also built by GitHub Actions. The `firmware` artifact includes
 | `src/hal/` | Board-specific code: display setup, frame canvas, debounced buttons, best-score storage (NVS) |
 | `src/input/` | Hardware-independent button snapshot passed to the game |
 | `src/game/` | Game rules: state machine, player physics, pipes, collision, difficulty. No display or GPIO code |
-| `src/render/` | Draws the game state: parallax background, pixel-art baking, score digits, colours, text |
+| `src/render/` | Draws the game state: day/night themes, parallax background, moon and bats, pixel-art baking, score digits, text |
 | `src/assets/` | Editable pixel art (character rows + palette): character skins, score digits |
 | `src/scenes/` | Full-screen modes: the game and the diagnostics screen |
 | `src/util/` | Frame limiter, frame stats, random number generator |

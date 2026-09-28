@@ -8,17 +8,13 @@
 #include "render/Colors.h"
 #include "render/SpriteBaker.h"
 #include "render/Text.h"
+#include "render/Theme.h"
 
 namespace {
 
+// Fixed UI colours. Scenery colours come from the day/night Theme.
 namespace palette {
-constexpr uint16_t kPipe = colors::rgb565(116, 191, 46);
-constexpr uint16_t kPipeLight = colors::rgb565(170, 230, 90);
-constexpr uint16_t kPipeDark = colors::rgb565(70, 130, 30);
 constexpr uint16_t kOutline = colors::rgb565(40, 30, 30);
-constexpr uint16_t kGrassLight = colors::rgb565(150, 220, 80);
-constexpr uint16_t kGrassDark = colors::rgb565(100, 180, 50);
-constexpr uint16_t kDirt = colors::rgb565(222, 216, 149);
 constexpr uint16_t kPanel = colors::rgb565(222, 216, 149);
 constexpr uint16_t kPanelBorder = colors::rgb565(84, 56, 71);
 constexpr uint16_t kText = colors::kWhite;
@@ -31,25 +27,30 @@ constexpr int16_t kPipeCapHeight = 10;
 constexpr int16_t kPipeCapOverhang = 2;
 constexpr int16_t kGrassHeight = 4;
 
+struct PipeColors {
+  uint16_t body, light, dark;
+};
+
 // Draws one pipe segment. The cap sits at the end facing the gap.
-void drawPipeSegment(LGFX_Sprite& canvas, const Rect& body, bool capAtBottom) {
+void drawPipeSegment(LGFX_Sprite& canvas, const Rect& body, bool capAtBottom,
+                     const PipeColors& c) {
   const int32_t x = static_cast<int32_t>(body.x);
   const int32_t y = static_cast<int32_t>(body.y);
   const int32_t w = static_cast<int32_t>(body.w);
   const int32_t h = static_cast<int32_t>(body.h);
   if (h <= 0) return;
 
-  canvas.fillRect(x, y, w, h, palette::kPipe);
-  canvas.fillRect(x + 3, y, 4, h, palette::kPipeLight);
-  canvas.fillRect(x + w - 5, y, 4, h, palette::kPipeDark);
+  canvas.fillRect(x, y, w, h, c.body);
+  canvas.fillRect(x + 3, y, 4, h, c.light);
+  canvas.fillRect(x + w - 5, y, 4, h, c.dark);
   canvas.drawRect(x, y, w, h, palette::kOutline);
 
   const int32_t capY = capAtBottom ? y + h - kPipeCapHeight : y;
   const int32_t capX = x - kPipeCapOverhang;
   const int32_t capW = w + 2 * kPipeCapOverhang;
-  canvas.fillRect(capX, capY, capW, kPipeCapHeight, palette::kPipe);
-  canvas.fillRect(capX + 3, capY, 4, kPipeCapHeight, palette::kPipeLight);
-  canvas.fillRect(capX + capW - 5, capY, 4, kPipeCapHeight, palette::kPipeDark);
+  canvas.fillRect(capX, capY, capW, kPipeCapHeight, c.body);
+  canvas.fillRect(capX + 3, capY, 4, kPipeCapHeight, c.light);
+  canvas.fillRect(capX + capW - 5, capY, 4, kPipeCapHeight, c.dark);
   canvas.drawRect(capX, capY, capW, kPipeCapHeight, palette::kOutline);
 }
 
@@ -67,6 +68,9 @@ float characterTilt(const Game& game) {
                     cfg::render::kMaxTilt);
 }
 
+// Smoothstep easing so each day/night fade starts and ends gently.
+float ease(float t) { return t * t * (3.0f - 2.0f * t); }
+
 }  // namespace
 
 bool GameRenderer::begin(const CharacterSkin& skin) {
@@ -82,11 +86,14 @@ bool GameRenderer::begin(const CharacterSkin& skin) {
 }
 
 void GameRenderer::draw(LGFX_Sprite& canvas, const Game& game, const FrameStats& stats) {
-  background_.draw(canvas, game.scrollDistance());
+  const float night = ease(game.nightAmount());
+  const Theme theme = Theme::blend(kDayTheme, kNightTheme, night);
+
+  background_.draw(canvas, game.scrollDistance(), theme, night, game.time());
   if (game.state() == GameState::Playing || game.state() == GameState::GameOver) {
-    drawPipes(canvas, game.pipes());
+    drawPipes(canvas, game.pipes(), theme);
   }
-  drawGround(canvas, game.scrollDistance());
+  drawGround(canvas, game.scrollDistance(), theme);
   drawCharacter(canvas, game);
 
   switch (game.state()) {
@@ -114,30 +121,35 @@ void GameRenderer::draw(LGFX_Sprite& canvas, const Game& game, const FrameStats&
   }
 }
 
-void GameRenderer::drawPipes(LGFX_Sprite& canvas, const Pipes& pipes) const {
+void GameRenderer::drawPipes(LGFX_Sprite& canvas, const Pipes& pipes, const Theme& theme) const {
+  const PipeColors colors = {theme.rgb565(ThemeColor::Pipe), theme.rgb565(ThemeColor::PipeLight),
+                             theme.rgb565(ThemeColor::PipeDark)};
   for (const Pipe& pipe : pipes.items()) {
     if (pipe.x > canvas.width() || pipe.x + cfg::game::kPipeWidth < -kPipeCapOverhang) {
       continue;
     }
-    drawPipeSegment(canvas, pipe.topRect(), true);
-    drawPipeSegment(canvas, pipe.bottomRect(), false);
+    drawPipeSegment(canvas, pipe.topRect(), true, colors);
+    drawPipeSegment(canvas, pipe.bottomRect(), false, colors);
   }
 }
 
-void GameRenderer::drawGround(LGFX_Sprite& canvas, double scrollDistance) const {
+void GameRenderer::drawGround(LGFX_Sprite& canvas, double scrollDistance,
+                              const Theme& theme) const {
   const int32_t groundY = static_cast<int32_t>(cfg::game::kGroundY);
   const int32_t w = canvas.width();
   const int32_t pattern = static_cast<int32_t>(cfg::render::kGroundPatternWidth);
   const int32_t half = pattern / 2;
   const int32_t scroll = static_cast<int32_t>(std::fmod(scrollDistance, pattern));
+  const uint16_t grassLight = theme.rgb565(ThemeColor::GrassLight);
+  const uint16_t grassDark = theme.rgb565(ThemeColor::GrassDark);
 
-  canvas.fillRect(0, groundY, w, canvas.height() - groundY, palette::kDirt);
+  canvas.fillRect(0, groundY, w, canvas.height() - groundY, theme.rgb565(ThemeColor::Dirt));
   for (int32_t x = -scroll; x < w; x += pattern) {
-    canvas.fillRect(x, groundY, half, kGrassHeight, palette::kGrassLight);
-    canvas.fillRect(x + half, groundY, half, kGrassHeight, palette::kGrassDark);
+    canvas.fillRect(x, groundY, half, kGrassHeight, grassLight);
+    canvas.fillRect(x + half, groundY, half, kGrassHeight, grassDark);
   }
   canvas.drawFastHLine(0, groundY, w, palette::kOutline);
-  canvas.drawFastHLine(0, groundY + kGrassHeight, w, palette::kGrassDark);
+  canvas.drawFastHLine(0, groundY + kGrassHeight, w, grassDark);
 }
 
 void GameRenderer::drawCharacter(LGFX_Sprite& canvas, const Game& game) {
