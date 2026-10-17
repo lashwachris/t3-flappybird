@@ -2,7 +2,8 @@
 
 A Flappy Bird-style game starring a winged cow, for the LilyGo T-Display S3 (ESP32-S3, 320×170 ST7789).
 
-See [PLAN.md](PLAN.md) for the design and the iteration roadmap.
+See [HANDOFF.md](HANDOFF.md) for the project's current state, design decisions and next ideas,
+and [PLAN.md](PLAN.md) for the original plan.
 
 ## Controls
 
@@ -62,3 +63,21 @@ Every push is also built by GitHub Actions. The `firmware` artifact includes
 
 To try different gameplay settings, edit `cfg::game` in `include/Config.h`. The ramp itself
 is in `src/game/Difficulty.h`.
+
+## Testing the game logic on a desktop
+
+The rules in `src/game/` have no hardware dependencies. A host simulation checks the
+state flow, best-score handling, day/night timing and fairness between characters:
+
+```bash
+g++ -std=c++17 -O2 -Wall -Iinclude -Isrc tools/host-sim/sim.cpp src/game/*.cpp \
+    src/assets/BirdSkin.cpp src/assets/CowSkin.cpp -o /tmp/sim && /tmp/sim
+```
+
+## Working with Claude Code
+
+`CLAUDE.md` is loaded automatically when you run `claude` in this folder. It covers build
+and flash commands, architecture rules and hardware gotchas. Start a new session with:
+
+> Read HANDOFF.md and CLAUDE.md, run the host simulation and `pio run` to confirm a clean
+> baseline, then let's plan the next feature.

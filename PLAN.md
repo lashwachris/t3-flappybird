@@ -1,5 +1,9 @@
 # Flappy Bird for LilyGo T-Display S3 — Implementation Plan
 
+> This is the original plan, with notes added as each iteration finished. For the
+> current state and code layout, see `HANDOFF.md` and `README.md`. The "Code structure"
+> sketch below predates the build.
+
 ## Hardware facts (verified against LilyGo docs)
 
 | Item | Value |
@@ -119,11 +123,10 @@ read as a restart.
    had the same survival rate. `Bird` was renamed `Player`.
 6. **Day/night cycle (Halloween theme).** Updated request: switch every **15** points
    and keep repeating (night at 15–29, 45–59, ...). Each fade takes ≤ 2 s (set to 1.5 s,
-   smoothstep-eased). Also add a moon, bats and glowing windows. Planned approach: bake the background layers as palette-indexed
-   sprites, so each frame only interpolates a small palette of colours between the
-   two themes instead of re-drawing the tiles. Pipes, ground and panel colours come
-   from the same interpolated theme. Optional background extras from the concept: clouds, a city skyline,
-   trees, and a grass-and-dirt ground strip, as parallax layers.
+   smoothstep-eased). Also add a moon, bats and glowing windows. Approach: the
+   background layers are palette-indexed sprites, so each frame only interpolates a
+   small palette of colours between the two themes instead of re-drawing the tiles.
+   Pipes and ground take their colours from the same interpolated theme.
 
 ### Keeping the character swappable
 
