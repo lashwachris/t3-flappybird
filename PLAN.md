@@ -212,6 +212,11 @@ rather than a stale percentage.*
 5. Optional idle timer in `GameScene` or `main.cpp` (Title/Game Over only), using
    `cfg::power::kIdleSleepSeconds`.
 
+**Status:** implemented and compiles (not yet checked on hardware). Sleep entry lives in
+`Display::powerDown()` (fade, panel sleep, GPIO 15 and 38 latched off) and
+`power_manager::enterDeepSleep()`; the idle timer is in `main.cpp` and scenes opt in with
+`idleSleepAllowed()`.
+
 *Check: the 1.5 s hold sleeps the board and the screen goes fully dark. BOTTOM wakes it to
 the Title screen with the correct best score, working display and no diagnostics screen.
 A short or single-button press does nothing. Then measure the sleep current with a USB

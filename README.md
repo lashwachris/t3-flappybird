@@ -32,6 +32,13 @@ red below 15 %. When the reading looks USB-fed it shows a bolt instead. The volt
 from GPIO 4 and the thresholds are in `cfg::power`. The Diagnostics screen prints the raw
 and converted millivolts, which is how to tune `kUsbPoweredMv` and check accuracy.
 
+**Deep sleep:** hold **TOP + BOTTOM** together for 1.5 s (a "HOLD TO SLEEP" bar fills) and
+the board fades out and enters deep sleep. Press **BOTTOM** to wake it; it restarts at the
+Title screen with your best score intact. After 3 minutes idle on the Title or Game Over
+screen it sleeps by itself. Settings are in `cfg::power` (`kSleepHoldSeconds`,
+`kIdleSleepSeconds`, 0 disables auto-sleep). Deep sleep drops the USB serial port, so press
+RST (or BOOT+RST) before re-flashing.
+
 **Changing the character:** skins live in `src/assets/` (`CowSkin`, and the original
 placeholder `BirdSkin`). To switch, change the skin passed to `GameScene` in `src/main.cpp`.
 Gap sizes adjust automatically.

@@ -1,8 +1,14 @@
 #include "hal/Display.h"
 
 #include <Arduino.h>
+#include <driver/gpio.h>
 
 bool Display::begin() {
+  // After a deep-sleep wake the pins are still latched off by powerDown().
+  gpio_deep_sleep_hold_dis();
+  gpio_hold_dis(static_cast<gpio_num_t>(cfg::pins::kPowerEnable));
+  gpio_hold_dis(static_cast<gpio_num_t>(cfg::pins::kLcdBacklight));
+
   pinMode(cfg::pins::kPowerEnable, OUTPUT);
   digitalWrite(cfg::pins::kPowerEnable, HIGH);
 
@@ -21,6 +27,20 @@ bool Display::begin() {
   canvas_.setColorDepth(16);
   canvas_.setPsram(false);
   return canvas_.createSprite(lcd_.width(), lcd_.height()) != nullptr;
+}
+
+void Display::powerDown() {
+  for (int b = cfg::display::kBrightness; b > 0; b -= 8) {
+    lcd_.setBrightness(b);
+    delay(cfg::power::kFadeStepMs);
+  }
+  lcd_.setBrightness(0);
+  lcd_.sleep();
+
+  digitalWrite(cfg::pins::kPowerEnable, LOW);
+  gpio_hold_en(static_cast<gpio_num_t>(cfg::pins::kPowerEnable));
+  gpio_hold_en(static_cast<gpio_num_t>(cfg::pins::kLcdBacklight));
+  gpio_deep_sleep_hold_en();
 }
 
 void Display::present() { canvas_.pushSprite(0, 0); }

@@ -13,4 +13,6 @@ class Scene {
   virtual void draw(LGFX_Sprite& canvas, const FrameStats& stats) = 0;
   // Whether the battery status should be drawn over this scene right now.
   virtual bool showsBatteryOverlay() const { return true; }
+  // Whether inactivity may put the board to sleep (never mid-round).
+  virtual bool idleSleepAllowed() const { return false; }
 };

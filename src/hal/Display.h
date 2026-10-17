@@ -13,6 +13,11 @@ class Display {
 
   LGFX_Sprite& canvas() { return canvas_; }
 
+  // Fades the backlight out, puts the panel to sleep and cuts the peripheral
+  // rail, latching both pins so they stay off through deep sleep. begin()
+  // releases the latches again after a wake.
+  void powerDown();
+
   // Pushes the canvas to the panel (DMA over the parallel bus).
   void present();
 

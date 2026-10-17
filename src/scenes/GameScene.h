@@ -36,8 +36,10 @@ class GameScene : public Scene {
   }
 
   bool showsBatteryOverlay() const override {
-    return cfg::power::kShowBatteryDuringPlay || game_.state() == GameState::Title ||
-           game_.state() == GameState::GameOver;
+    return cfg::power::kShowBatteryDuringPlay || idleSleepAllowed();
+  }
+  bool idleSleepAllowed() const override {
+    return game_.state() == GameState::Title || game_.state() == GameState::GameOver;
   }
 
  private:

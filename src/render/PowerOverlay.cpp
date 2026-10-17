@@ -62,4 +62,24 @@ void drawBattery(LGFX_Sprite& canvas, const Battery& battery, uint32_t nowMs) {
                      kOutline);
 }
 
+void drawSleepProgress(LGFX_Sprite& canvas, float progress) {
+  constexpr int16_t kW = 150;
+  constexpr int16_t kH = 40;
+  const int16_t x = (canvas.width() - kW) / 2;
+  const int16_t y = (canvas.height() - kH) / 2;
+
+  canvas.fillRoundRect(x, y, kW, kH, 6, colors::kBlack);
+  canvas.drawRoundRect(x, y, kW, kH, 6, colors::kLightGrey);
+
+  canvas.setFont(&fonts::Font2);
+  canvas.setTextDatum(textdatum_t::top_center);
+  canvas.setTextColor(colors::kWhite);
+  canvas.drawString("HOLD TO SLEEP", x + kW / 2, y + 5);
+
+  constexpr int16_t kBarW = kW - 20;
+  canvas.drawRect(x + 10, y + 26, kBarW, 8, colors::kLightGrey);
+  canvas.fillRect(x + 11, y + 27, static_cast<int16_t>((kBarW - 2) * progress), 6,
+                  colors::kCyan);
+}
+
 }  // namespace power_overlay

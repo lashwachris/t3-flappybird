@@ -114,6 +114,12 @@ constexpr uint32_t kBatteryEmptyMv = 3300;
 constexpr uint32_t kUsbPoweredMv = 4250;
 constexpr uint8_t kLowBatteryPercent = 15;
 constexpr bool kShowBatteryDuringPlay = false;
+
+// Deep sleep: hold TOP + BOTTOM together to sleep; BOTTOM wakes the board.
+constexpr float kSleepHoldSeconds = 1.5f;
+constexpr uint32_t kIdleSleepSeconds = 180;  // Title/Game Over only. 0 disables.
+constexpr uint32_t kFadeStepMs = 8;          // Backlight fade: 8 brightness units per step.
+constexpr uint32_t kReleaseTimeoutMs = 5000;  // Max wait for buttons to be released.
 }  // namespace power
 
 namespace input {
