@@ -92,7 +92,7 @@ void DiagnosticsScene::drawButtonIndicator(LGFX_Sprite& canvas, int16_t y, const
 
 void DiagnosticsScene::drawStats(LGFX_Sprite& canvas, const FrameStats& stats) const {
   constexpr int16_t kPanelW = 176;
-  constexpr int16_t kPanelH = 70;
+  constexpr int16_t kPanelH = 90;
   const int16_t x = canvas.width() - kPanelW - 8;
   const int16_t y = (canvas.height() - kPanelH) / 2;
 
@@ -111,4 +111,10 @@ void DiagnosticsScene::drawStats(LGFX_Sprite& canvas, const FrameStats& stats) c
   canvas.drawString(line, x + 8, y + 26);
   snprintf(line, sizeof(line), "push %.2f ms (max %.0f)", stats.presentMs(), stats.maxFps());
   canvas.drawString(line, x + 8, y + 46);
+  if (battery_ != nullptr) {
+    snprintf(line, sizeof(line), "bat %lu mV (pin %lu) %u%%",
+             static_cast<unsigned long>(battery_->millivolts()),
+             static_cast<unsigned long>(battery_->pinMillivolts()), battery_->percent());
+    canvas.drawString(line, x + 8, y + 66);
+  }
 }

@@ -23,6 +23,9 @@ constexpr int8_t kLcdData[8] = {39, 40, 41, 42, 45, 46, 47, 48};
 // landscape with the USB-C port on the left. Swap these if it's reversed.
 constexpr uint8_t kButtonTop = 0;      // BOOT
 constexpr uint8_t kButtonBottom = 14;  // KEY
+
+// Battery voltage sense (ADC1) through a 1/2 divider.
+constexpr uint8_t kBatterySense = 4;
 }  // namespace pins
 
 namespace display {
@@ -98,6 +101,20 @@ constexpr float kCloudParallax = 0.1f;
 constexpr float kSkylineParallax = 0.25f;
 constexpr float kBushParallax = 0.5f;
 }  // namespace render
+
+namespace power {
+constexpr uint32_t kBatterySampleMs = 1000;
+constexpr uint8_t kBatterySamples = 8;        // Median of this many ADC reads.
+constexpr float kBatteryDividerRatio = 2.0f;  // Pin mV * ratio = battery mV.
+constexpr float kBatteryFilter = 0.3f;        // Low-pass weight of each new sample (0-1).
+constexpr uint32_t kBatteryFullMv = 4150;
+constexpr uint32_t kBatteryEmptyMv = 3300;
+// At or above this the reading is assumed to be USB-fed, not the cell itself.
+// Tune it with the Diagnostics screen readout (battery on vs. USB only).
+constexpr uint32_t kUsbPoweredMv = 4250;
+constexpr uint8_t kLowBatteryPercent = 15;
+constexpr bool kShowBatteryDuringPlay = false;
+}  // namespace power
 
 namespace input {
 // After a state change, further changes are ignored for this long. The first

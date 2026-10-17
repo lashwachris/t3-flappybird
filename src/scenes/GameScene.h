@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "Config.h"
 #include "game/CharacterSkin.h"
 #include "game/Game.h"
 #include "hal/HighScoreStore.h"
@@ -32,6 +33,11 @@ class GameScene : public Scene {
   }
   void draw(LGFX_Sprite& canvas, const FrameStats& stats) override {
     renderer_.draw(canvas, game_, stats);
+  }
+
+  bool showsBatteryOverlay() const override {
+    return cfg::power::kShowBatteryDuringPlay || game_.state() == GameState::Title ||
+           game_.state() == GameState::GameOver;
   }
 
  private:

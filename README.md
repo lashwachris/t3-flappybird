@@ -26,6 +26,12 @@ with glowing windows, and darker pipes and ground. Night covers scores 15–29, 
 on. Starting a new round fades back to day. The colours are in `src/render/Theme.cpp`, and the
 timing is in `cfg::game` (`kNightCycleScore`, `kThemeFadeTime`).
 
+**Battery indicator:** the top-right corner shows a battery icon and percentage on the
+Title and Game Over screens (hidden during play; see `kShowBatteryDuringPlay`). It blinks
+red below 15 %. When the reading looks USB-fed it shows a bolt instead. The voltage comes
+from GPIO 4 and the thresholds are in `cfg::power`. The Diagnostics screen prints the raw
+and converted millivolts, which is how to tune `kUsbPoweredMv` and check accuracy.
+
 **Changing the character:** skins live in `src/assets/` (`CowSkin`, and the original
 placeholder `BirdSkin`). To switch, change the skin passed to `GameScene` in `src/main.cpp`.
 Gap sizes adjust automatically.

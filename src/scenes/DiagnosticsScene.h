@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "hal/Battery.h"
 #include "scenes/Scene.h"
 
 // Hardware bring-up screen. It checks:
@@ -13,6 +14,9 @@
 // A bouncing square forces a full-frame redraw every frame.
 class DiagnosticsScene : public Scene {
  public:
+  // Optional: shows raw and converted battery readings (calibration aid).
+  void setBattery(const Battery* battery) { battery_ = battery; }
+
   void update(const InputState& input, float dt) override;
   void draw(LGFX_Sprite& canvas, const FrameStats& stats) override;
 
@@ -24,6 +28,7 @@ class DiagnosticsScene : public Scene {
 
   static constexpr int16_t kBoxSize = 20;
 
+  const Battery* battery_ = nullptr;
   InputState input_;
   uint32_t topPresses_ = 0;
   uint32_t bottomPresses_ = 0;

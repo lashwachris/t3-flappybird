@@ -11,4 +11,6 @@ class Scene {
   virtual ~Scene() = default;
   virtual void update(const InputState& input, float dt) = 0;
   virtual void draw(LGFX_Sprite& canvas, const FrameStats& stats) = 0;
+  // Whether the battery status should be drawn over this scene right now.
+  virtual bool showsBatteryOverlay() const { return true; }
 };

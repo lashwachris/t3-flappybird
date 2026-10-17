@@ -2,10 +2,12 @@
 
 #include "Config.h"
 #include "assets/CowSkin.h"
+#include "hal/Battery.h"
 #include "hal/Button.h"
 #include "hal/Display.h"
 #include "hal/HighScoreStore.h"
 #include "input/InputState.h"
+#include "render/PowerOverlay.h"
 #include "scenes/DiagnosticsScene.h"
 #include "scenes/GameScene.h"
 #include "scenes/Scene.h"
@@ -15,6 +17,7 @@
 namespace {
 
 Display display;
+Battery battery;
 Button buttonTop(cfg::pins::kButtonTop);
 Button buttonBottom(cfg::pins::kButtonBottom);
 FrameLimiter frameLimiter(cfg::timing::kTargetFps);
@@ -47,12 +50,14 @@ void setup() {
   if (!display.begin()) {
     halt("Display init failed: could not allocate frame canvas");
   }
+  battery.begin();
   buttonTop.begin();
   buttonBottom.begin();
 
   // Holding BOTTOM during boot opens the hardware diagnostics screen instead.
   // (TOP can't be used: holding BOOT at reset enters the ROM bootloader.)
   if (buttonBottom.isDown()) {
+    diagnosticsScene.setBattery(&battery);
     scene = &diagnosticsScene;
   } else if (!gameScene.begin(esp_random())) {
     halt("Game init failed: could not allocate game sprites");
@@ -67,7 +72,11 @@ void loop() {
   scene->update(readInput(), cfg::timing::kFixedDt);
 
   const uint32_t renderStartUs = micros();
+  battery.update(millis());
   scene->draw(display.canvas(), frameStats);
+  if (scene->showsBatteryOverlay()) {
+    power_overlay::drawBattery(display.canvas(), battery, millis());
+  }
   const uint32_t presentStartUs = micros();
   display.present();
   const uint32_t frameEndUs = micros();
